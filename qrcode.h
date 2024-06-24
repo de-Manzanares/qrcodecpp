@@ -1,12 +1,12 @@
 #ifndef QRCODE_H
 #define QRCODE_H
 
+#include <algorithm>
 #include <bitset>
+#include <cmath>
 #include <string>
 #include <vector>
 #include <map>
-
-// todo polynomial long division LOL
 
 namespace qrcode {
 
@@ -33,6 +33,14 @@ void termination_zeros(std::vector<int>& v);
 std::vector<std::bitset<8>> bit_string(std::vector<int>& v);
 void padding_bytes(std::vector<std::bitset<8>>& v, size_t size);
 std::vector<std::bitset<8>> encode(const std::string& s);
+
+std::vector<int> get_message_polynomial(const std::vector<std::bitset<8>>& message);
+std::vector<int> get_generator_polynomial(size_t codewordSize);
+
+int antilog(int x);
+int log(int x);
+
+std::vector<int> error_correction_codewords(const std::vector<int>& generator, const std::vector<int>& message);
 
 } // namespace qrcode
 

@@ -5,6 +5,7 @@
 #include <random>
 #include <chrono>
 #include <iomanip>
+#include <utility>
 
 std::string create_string_of_length(size_t size)
 {
@@ -19,12 +20,15 @@ std::string create_string_of_length(size_t size)
 
 void setup(const std::string& s, std::vector<std::bitset<8>>& b) { b = qrcode::encode(s); }
 
+void print(const std::vector<int>& v) { for (const auto& n : v) { std::cout << std::setw(4) << n << " "; }}
+
 void print(const std::vector<std::bitset<8>>& v) { for (const auto& byte : v) { std::cout << byte << " "; }}
+
+std::string s;
+std::vector<std::bitset<8>> code;
 
 TEST_CASE("encoding")
 {
-    std::string s;
-    std::vector<std::bitset<8>> code;
     SECTION("Empty string") {
         setup("", code);
         print(code);
@@ -101,5 +105,54 @@ TEST_CASE("encoding")
             std::cout << std::endl;
             CHECK(code.size() == 132);
         }
+    }
+}
+
+TEST_CASE("error correcting codes")
+{
+    setup("123", code);
+    print(code);
+    std::cout << "\n";
+    print(qrcode::get_message_polynomial(code));
+    std::cout << "\n";
+    print(qrcode::get_generator_polynomial(13));
+}
+
+TEST_CASE("log antilog")
+{
+    SECTION("antilog") {
+        CHECK(qrcode::antilog(3) == 8);
+        CHECK(qrcode::antilog(8) == 29);
+        CHECK(qrcode::antilog(9) == 58);
+        CHECK(qrcode::antilog(10) == 116);
+        CHECK(qrcode::antilog(11) == 232);
+        CHECK(qrcode::antilog(12) == 205);
+        CHECK(qrcode::antilog(13) == 135);
+        CHECK(qrcode::antilog(255) == 1);
+    }SECTION("log") {
+        CHECK(qrcode::log(8) == 3);
+        CHECK(qrcode::log(29) == 8);
+        CHECK(qrcode::log(58) == 9);
+        CHECK(qrcode::log(116) == 10);
+        CHECK(qrcode::log(232) == 11);
+        CHECK(qrcode::log(205) == 12);
+        CHECK(qrcode::log(135) == 13);
+        CHECK(qrcode::log(1) == 255);
+    }
+}
+
+std::vector<int> generator;
+std::vector<int> message;
+
+void setup_error_codewords(std::vector<int> a, std::vector<int> b)
+{
+    message = std::move(a);
+    generator = std::move(b);
+}
+
+TEST_CASE("error correction codewords")
+{
+    SECTION("a") {
+        setup_error_codewords({0, 1, 1}, {0, 0, 1});
     }
 }
